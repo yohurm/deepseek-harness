@@ -104,7 +104,7 @@ describe('sessionStats projection unit (registry drive)', () => {
     const { ctx, session } = await harness(true)
     session.append('turn/start', { turn: 1 })
     closeStep(session, 1, 1)
-    session.append('turn/end', { turn: 1, reason: { kind: 'aborted', reason: { kind: 'legacy' } } })
+    session.append('turn/end', { turn: 1, reason: { kind: 'aborted', reason: { kind: 'user' } } })
     expect(ctx.sessionProjections.snapshot(session).values.sessionStats)
       .toMatchObject({ turns: 1, steps: 1 })
   })

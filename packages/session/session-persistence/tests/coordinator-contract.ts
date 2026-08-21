@@ -424,123 +424,33 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
       }
     })
 
-    it('loads pre-identity message logs into resumable current sessions', async () => {
+    it('rejects pre-identity message logs', async () => {
       const fix = await makeFixture()
       const { ctx, fiber } = await freshCtx(fix)
       try {
         const id = SessionId('legacy-message-load')
         await ctx.sessionPersistence.create(meta(id, WORK))
-        await ctx.sessionPersistence.append(id, legacyMessageLog())
 
-        for (const snapshot of [
-          await ctx.sessionPersistence.inspect(id),
-          await ctx.sessionPersistence.load(id),
-        ]) {
-          const messages: { id: string }[] = []
-          for (const event of snapshot.events) {
-            if (event.type === 'user/message') messages.push(event.data)
-            else if (event.type === 'assistant/message'
-              || event.type === 'tool/result') messages.push(event.data.message)
-          }
-          expect(messages.map(message => message.id)).toEqual([
-            `legacy-message:${id}:1`,
-            `legacy-message:${id}:3`,
-            `legacy-message:${id}:5`,
-            `legacy-message:${id}:5`,
-          ])
-          expect(messages.every(message => Object.isFrozen(message))).toBe(true)
-
-          const resumed = Session.create(id, snapshot.events, snapshot.meta)
-          expect(resumed.deriveMessages().map(message => message.id)).toEqual([
-            `legacy-message:${id}:1`,
-            `legacy-message:${id}:3`,
-            `legacy-message:${id}:5`,
-          ])
-        }
-
-        const replacementSuffix = await ctx.sessionPersistence.readFrom(id, 6)
-        expect(replacementSuffix.events[0]).toMatchObject({
-          type: 'tool/result',
-          seq: 6,
-          data: { message: { id: `legacy-message:${id}:5` } },
-        })
+        await expect(ctx.sessionPersistence.append(id, legacyMessageLog())).rejects.toThrow(/pre-identity/)
       } finally {
         await fiber.dispose()
         await fix.cleanup()
       }
     })
 
-    it('loads pre-react-loop session logs into resumable current sessions', async () => {
+    it('rejects pre-react-loop session logs', async () => {
       const fix = await makeFixture()
       const { ctx, fiber } = await freshCtx(fix)
       try {
         const id = SessionId('pre-react-loop-load')
         const log = preReactLoopLog()
-        const legacySteering = log[3] as unknown as { data: { message: { id: string } } }
         await ctx.sessionPersistence.create(meta(id, WORK))
-        await ctx.sessionPersistence.append(id, log)
 
-        const snapshots = [
-          await ctx.sessionPersistence.inspect(id),
-          await ctx.sessionPersistence.readFrom(id, 0),
-          await ctx.sessionPersistence.load(id),
-        ]
-        for (const snapshot of snapshots) {
-          expect(snapshot.events.some(event => (event.type as string) === 'steering/message')).toBe(false)
-          expect(snapshot.events.filter(event => event.type === 'turn/start').map(event => event.data))
-            .toEqual([
-              { turn: 1 }, { turn: 2 }, { turn: 3 }, { turn: 4 }, { turn: 5 }, { turn: 6 }, { turn: 7 },
-            ])
-          expect(snapshot.events.filter(event => event.type === 'turn/end').map(event => event.data)).toEqual([
-            { turn: 1, reason: { kind: 'completed' } },
-            {
-              turn: 2,
-              reason: { kind: 'error', error: { message: 'old provider failure', code: 'SERVER' } },
-            },
-            { turn: 3, reason: { kind: 'aborted', reason: { kind: 'legacy' } } },
-            { turn: 4, reason: { kind: 'aborted', reason: { kind: 'disposed' } } },
-            {
-              turn: 5,
-              reason: { kind: 'error', error: { message: 'old thrown value', code: 'UNKNOWN' } },
-            },
-            {
-              turn: 6,
-              reason: {
-                kind: 'error',
-                error: {
-                  message: 'old detailed provider failure',
-                  code: 'RATE_LIMIT',
-                  status: 429,
-                  providerRetryAfterMs: 1000,
-                  requestId: 'request-1',
-                },
-              },
-            },
-            {
-              turn: 7,
-              reason: { kind: 'error', error: { message: 'old coded error', code: 'CODED' } },
-            },
-          ])
-
-          const resumed = Session.create(id, snapshot.events, snapshot.meta)
-          expect(resumed.deriveMessages().map(message => message.content)).toEqual([
-            [{ type: 'text', text: 'old prompt' }],
-            [{ type: 'text', text: 'old steering' }],
-          ])
-        }
-
-        const suffix = await ctx.sessionPersistence.readFrom(id, 3)
-        expect(suffix.events[0]).toMatchObject({
-          type: 'user/message',
-          seq: 3,
-          data: { id: legacySteering.data.message.id },
-        })
-        expect(suffix.events.filter(event => event.type === 'turn/end')
-          .every(event => !Object.hasOwn(event.data, 'step'))).toBe(true)
+        await expect(ctx.sessionPersistence.append(id, log)).rejects.toThrow('removed steering/message event at seq 3')
 
         const flatId = SessionId('pre-react-loop-flat-steering')
         await ctx.sessionPersistence.create(meta(flatId, WORK))
-        await ctx.sessionPersistence.append(flatId, [{
+        await expect(ctx.sessionPersistence.append(flatId, [{
           type: 'steering/message',
           seq: 0,
           time: 1,
@@ -550,15 +460,7 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
             source: { kind: 'user' },
           },
           surfaceOp: 'append',
-        } as unknown as SessionEvent])
-        expect((await ctx.sessionPersistence.inspect(flatId)).events[0]).toMatchObject({
-          type: 'user/message',
-          data: {
-            id: `legacy-message:${flatId}:0`,
-            role: 'user',
-            content: [{ type: 'text', text: 'flat steering' }],
-          },
-        })
+        } as unknown as SessionEvent])).rejects.toThrow('removed steering/message event at seq 0')
 
         const extendedId = SessionId('current-extended-turn-end')
         await ctx.sessionPersistence.create(meta(extendedId, WORK))
@@ -610,7 +512,7 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/start', seq: 0, time: 1,
               data: { turn: 1, trigger: null },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/start',
+            message: 'pre-react-loop turn/start with a trigger',
           },
           {
             id: 'invalid-old-steering',
@@ -618,14 +520,14 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'steering/message', seq: 0, time: 1, surfaceOp: 'append',
               data: { turn: 1, content: [], source: { kind: 'user' }, extra: true },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop steering/message',
+            message: 'removed steering/message event',
           },
           {
             id: 'invalid-old-steering-data',
             event: {
               type: 'steering/message', seq: 0, time: 1, surfaceOp: 'append', data: null,
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop steering/message',
+            message: 'removed steering/message event',
           },
           {
             id: 'invalid-old-turn-end',
@@ -633,7 +535,7 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, reason: { kind: 'completed', extra: true } },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'invalid turn/end reason "completed"',
           },
           {
             id: 'invalid-old-turn-end-reason',
@@ -641,15 +543,15 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, reason: null },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'invalid turn/end reason at seq 0',
           },
           {
-            id: 'unsupported-intermediate-turn-end-step',
+            id: 'invalid-turn-end-step',
             event: {
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, step: 1, reason: { kind: 'completed' } },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'invalid turn/end envelope',
           },
           {
             id: 'invalid-old-turn-end-aborted',
@@ -657,7 +559,7 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, reason: { kind: 'aborted', extra: true } },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'pre-react-loop turn/end "aborted" reason',
           },
           {
             id: 'invalid-old-turn-end-disposed',
@@ -665,7 +567,7 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, reason: { kind: 'disposed', extra: true } },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'removed turn/end "disposed" reason',
           },
           {
             id: 'invalid-old-turn-end-error-step',
@@ -673,7 +575,7 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, reason: { kind: 'error', step: -1, message: 'bad step' } },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'pre-react-loop turn/end "error" reason',
           },
           {
             id: 'invalid-old-turn-end-error-code',
@@ -681,15 +583,14 @@ export function runCoordinatorContract(name: string, makeFixture: () => Promise<
               type: 'turn/end', seq: 0, time: 1,
               data: { turn: 1, reason: { kind: 'error', step: 0, message: 'bad code', code: 1 } },
             } as unknown as SessionEvent,
-            message: 'malformed pre-react-loop turn/end',
+            message: 'pre-react-loop turn/end "error" reason',
           },
         ]
         for (const malformed of malformedLegacy) {
           const malformedId = SessionId(malformed.id)
           await ctx.sessionPersistence.create(meta(malformedId, WORK))
-          await ctx.sessionPersistence.append(malformedId, [malformed.event])
-          await expect(ctx.sessionPersistence.inspect(malformedId)).rejects.toThrow(malformed.message)
-          await expect(ctx.sessionPersistence.readFrom(malformedId, 0)).rejects.toThrow(malformed.message)
+          await expect(ctx.sessionPersistence.append(malformedId, [malformed.event]))
+            .rejects.toThrow(malformed.message)
         }
 
         for (const type of ['tool/result'] as const) {

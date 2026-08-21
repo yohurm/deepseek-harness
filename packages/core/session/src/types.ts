@@ -146,8 +146,8 @@ export type AgentCancelCause =
   | { readonly kind: 'hook'; readonly reason: string }
   | { readonly kind: 'disposed' }
 
-/** Durable cancellation cause, including imports whose original coarse record carried no cause. */
-export type TurnEndCancelCause = AgentCancelCause | { readonly kind: 'legacy' }
+/** Durable cancellation cause. */
+export type TurnEndCancelCause = AgentCancelCause
 
 /**
  * Why a turn ended. Merge-extensible sum type.

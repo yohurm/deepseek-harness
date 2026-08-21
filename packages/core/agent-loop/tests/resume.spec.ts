@@ -89,7 +89,7 @@ function throwUnknown(value: unknown): never {
 }
 
 describe('the session-persistence Agent Note: AgentLoop factory create/resume', () => {
-  it('resumes a pre-react-loop session including pre-identity message events', async () => {
+  it('rejects appending a pre-react-loop session including pre-identity message events', async () => {
     const sessionId = SessionId('pre-identity-resume')
     const first = await persistentHarness(new MockAdapter([]))
     await first.ctx.sessionPersistence.create({
@@ -97,7 +97,7 @@ describe('the session-persistence Agent Note: AgentLoop factory create/resume', 
       id: sessionId,
       createdAt: 1,
     })
-    await first.ctx.sessionPersistence.append(sessionId, [
+    await expect(first.ctx.sessionPersistence.append(sessionId, [
       {
         type: 'turn/start', seq: 0, time: 1,
         data: { turn: 1, trigger: { kind: 'message', source: { kind: 'user' } } },
@@ -135,34 +135,8 @@ describe('the session-persistence Agent Note: AgentLoop factory create/resume', 
       },
       { type: 'step/end', seq: 5, time: 6, data: { turn: 1, step: 1 } },
       { type: 'turn/end', seq: 6, time: 7, data: { turn: 1, reason: { kind: 'completed' } } },
-    ] as unknown as SessionEvent[])
+    ] as unknown as SessionEvent[])).rejects.toThrow('removed steering/message event at seq 4')
     await first.ctx.fiber.dispose()
-
-    const ctx = await mountPersistentHarness(first.root, new MockAdapter([textResponse('new answer')]))
-    const handle = await ctx.agents.resume({
-      resumeSessionId: sessionId,
-      agentOptions: { provider: 'mock', model: 'mock' },
-    })
-    expect(handle.agent.session.deriveMessages()).toMatchObject([
-      { id: `legacy-message:${sessionId}:1`, role: 'user' },
-      { id: `legacy-message:${sessionId}:3`, role: 'assistant' },
-      { id: `legacy-message:${sessionId}:4`, role: 'user' },
-    ])
-    expect(handle.agent.inbox.nextTurn).toEqual([])
-    expect(handle.agent.inbox.nextStep).toEqual([])
-
-    handle.agent.followup(createUserMessage({
-      content: [{ type: 'text', text: 'new question' }],
-      source: { kind: 'user' },
-    }))
-    await waitForIdle(ctx, handle.agent)
-    expect(handle.agent.session.deriveMessages()).toHaveLength(5)
-    expect(handle.agent.session.events.at(-1)).toMatchObject({
-      type: 'turn/end',
-      data: { reason: { kind: 'completed' } },
-    })
-    await handle.dispose()
-    await ctx.fiber.dispose()
   })
 
   it('normalizes a non-Error resume publication failure for rollback and rethrows it', async () => {

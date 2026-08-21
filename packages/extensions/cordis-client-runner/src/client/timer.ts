@@ -7,12 +7,7 @@ import type { Context } from '@deepseek-ai/cordis'
  * The browser Service preserves the vendored Host TimerService's erased callback tuples and arbitrary
  * async-iterator return and rejection values, so narrowing these positions would change the public API.
  */
-/* oxlint-disable typescript/no-explicit-any -- Exact Host TimerService API compatibility; see above. */
-/* oxlint-disable typescript/no-unsafe-argument -- The erased callback tuples pass through unchanged. */
-/* oxlint-disable typescript/no-unsafe-assignment -- The erased callback tuples pass through unchanged. */
-/* oxlint-disable typescript/no-unsafe-member-access -- The returned wrapper retains its dispose property. */
-/* oxlint-disable typescript/no-unsafe-return -- The erased generic return values pass through unchanged. */
-/* oxlint-disable typescript/prefer-promise-reject-errors -- Async iterators preserve arbitrary throw reasons. */
+/* oxlint-disable typescript/no-explicit-any -- The erased Host TimerService overload tuples pass through unchanged. */
 
 declare module '@deepseek-ai/cordis' {
   interface Context extends Pick<ClientTimerService, 'interval' | 'timeout' | 'throttle' | 'debounce'> {

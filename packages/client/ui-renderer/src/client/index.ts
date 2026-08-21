@@ -11,6 +11,9 @@ import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
 import { createSlotRenderer } from './scoped-slots.tsx'
 import { buildRenderApp } from './app.tsx'
 
+export { bindSnapshotSelector } from './bind.ts'
+export { createSlotRenderer } from './scoped-slots.tsx'
+
 /** Selector hook over a session's conversation snapshot. */
 export type UseSession<Snap extends object = object> = SnapshotSelectorHook<Snap>
 

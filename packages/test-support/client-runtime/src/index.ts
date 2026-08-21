@@ -25,8 +25,10 @@ import type { BoundFunctions } from '@testing-library/dom'
 import {
   ConversationEventRegistry, ConversationViewRegistry, SlotRegistry,
 } from '@deepseek-ai/dsh-client-runtime/client'
-import { bindSnapshotSelector as bindRendererSnapshotSelector } from '@deepseek-ai/dsh-client-ui-renderer/src/client/bind.ts'
-import { createSlotRenderer as createRenderer } from '@deepseek-ai/dsh-client-ui-renderer/src/client/scoped-slots.tsx'
+import {
+  bindSnapshotSelector as bindRendererSnapshotSelector,
+  createSlotRenderer as createRenderer,
+} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {
   ChildrenDecl, ComposedProps, HostObservable, OwnerOf, SlotComponent, SlotMap, SlotRenderer,
   SlotRendererHost, SnapshotSelectorHook, StoreInstanceLike,

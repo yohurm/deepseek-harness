@@ -103,7 +103,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     title: 'Durable binary attachment storage',
     mode: 'seam',
     implementations: ['attachment-local'],
-    consumers: ['host-runtime', 'llm-pi-ai'],
+    consumers: ['host-apiproxy', 'llm-pi-ai'],
     note: 'The host commits accepted images before session events; provider adapters resolve authorized durable references into provider-native content.',
   },
   {
@@ -136,7 +136,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'session',
     title: 'In-memory session store',
     mode: 'core',
-    consumers: ['agent-loop', 'agent', 'session-persistence', 'session-query', 'session-query-sqlite', 'subagent-inprocess', 'invariants', 'message-feedback'],
+    consumers: ['agent-loop', 'agent', 'session-persistence', 'session-query', 'session-query-sqlite', 'subagent-in-process-driver', 'invariants', 'message-feedback'],
     note: 'Owns append-only Session instances and emits the durable session event feed.',
   },
   {
@@ -177,7 +177,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     title: 'User-settings seam',
     mode: 'seam',
     implementations: ['settings-file'],
-    consumers: ['llm-deepseek', 'llm-pi-ai', 'apiproxy'],
+    consumers: ['llm-deepseek', 'llm-pi-ai', 'host-apiproxy'],
     note: 'Plugins register namespace schemas and resolve layered values; providers store the raw document. The LLM adapters register their entry config as the composition base under the user section; the web gateway serves redacted layered descriptors and writes the user layer.',
   },
   {
@@ -186,7 +186,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     title: 'Credential seam',
     mode: 'seam',
     implementations: ['credentials-local'],
-    consumers: ['llm-deepseek', 'llm-pi-ai', 'apiproxy'],
+    consumers: ['llm-deepseek', 'llm-pi-ai', 'host-apiproxy'],
     note: 'Configuration carries references to secrets; providers own the values. Consumers resolve per operation, so a rotated credential reaches the very next request; the web gateway exposes value-free views and write-only storage.',
   },
   {
@@ -227,7 +227,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'workspace',
     title: 'Workspace entity registry',
     mode: 'core',
-    consumers: ['apiproxy'],
+    consumers: ['host-apiproxy'],
     note: 'Owns WorkspaceId-branded records over the domain facility; stable sessionIds accounts drive Host RPC and GUI projections.',
   },
   {
@@ -337,7 +337,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'agent',
     title: 'Agent service',
     mode: 'core',
-    consumers: ['agent-loop', 'acp', 'subagent-inprocess'],
+    consumers: ['agent-loop', 'acp', 'subagent-in-process-driver'],
     note: 'Owns live Agent handles, the create/resume factory seam, and process-local initiator propagation.',
   },
   {
@@ -426,7 +426,7 @@ const SERVICE_ROLES: ServiceRole[] = [
   },
   {
     key: 'approval',
-    pkg: 'approval',
+    pkg: 'user-approval',
     title: 'Approval seam',
     mode: 'seam',
     implementations: ['acp'],
@@ -446,7 +446,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'code-runtime',
     title: 'Code-execution seam',
     mode: 'seam',
-    implementations: ['code-runtime-worker'],
+    implementations: ['code-runtime-worker-thread'],
     consumers: ['tools'],
     note: 'Runs one model-written program against host-provided async bindings; backends differ by substrate and language (the tool registry consumes it for Code Mode).',
   },
@@ -480,10 +480,10 @@ const SERVICE_ROLES: ServiceRole[] = [
   },
   {
     key: 'agentTeams',
-    pkg: 'agent-team',
+    pkg: 'experimental-agent-team',
     title: 'Agent Teams coordination domain',
     mode: 'core',
-    consumers: ['tool-agent-team'],
+    consumers: ['experimental-tool-agent-team'],
     note: 'Owns the implicit-root roster, durable peer mailbox, shared task DAG, and continuable-child lifecycle; tool-agent-team contributes the scoped model policy and controls.',
   },
   {
@@ -515,27 +515,27 @@ const SERVICE_ROLES: ServiceRole[] = [
   },
   {
     key: 'directoryPicker',
-    pkg: 'directory-picker',
+    pkg: 'host-directory-picker',
     title: 'Workspace-directory picking seam',
     mode: 'seam',
-    implementations: ['directory-picker-native', 'directory-picker-browse'],
-    consumers: ['apiproxy'],
+    implementations: ['host-directory-picker-native', 'host-directory-picker-browse'],
+    consumers: ['host-apiproxy'],
     note: 'Discriminated interaction capability: the native backend opens one OS chooser on the host display, the browse backend serves listing/creation primitives for the in-app browser; dual-face backends fill ui-workspace directory-flow slots from their browser halves (no wire advertisement).',
   },
   {
     key: 'webServer',
-    pkg: 'webserver',
+    pkg: 'host-webserver',
     title: 'HTTP route registration',
     mode: 'core',
-    consumers: ['connection', 'modules', 'hmr'],
+    consumers: ['client-connection', 'client-modules', 'client-hmr'],
     note: 'Plain node:http carrier: named-route registry, index transform taps, and the static dist fallback; web-transport plugins register their own routes.',
   },
   {
     key: 'clientModules',
-    pkg: 'modules',
+    pkg: 'client-modules',
     title: 'Client plugin graph host',
     mode: 'core',
-    consumers: ['hmr'],
+    consumers: ['client-hmr'],
     note: 'Composes the __DSH_BOOT__ entry graph from an incremental dsh.client scan, serves plugin bundles, and notifies rebuilt/graph-changed subscribers.',
   },
   {
@@ -552,16 +552,16 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'lsp',
     title: 'Language-server navigation seam',
     mode: 'seam',
-    implementations: ['lsp-local'],
+    implementations: ['lsp-stdio'],
     consumers: ['tool-lsp'],
     note: 'Provider registration and selection plus normalized query execution over exactly four operations; the seam offers no protocol escape hatch, so a backend translates into the normalized request and result.',
   },
   {
     key: 'apiProxy',
-    pkg: 'apiproxy',
+    pkg: 'host-apiproxy',
     title: 'Host API dispatch',
     mode: 'core',
-    consumers: ['connection'],
+    consumers: ['client-connection'],
     note: 'The transport-agnostic host gateway face: it dispatches browser API calls, and each open host stream subscribes to the events it forwards rather than being pushed to through a broadcast verb.',
   },
   {
@@ -642,8 +642,23 @@ function assertServiceRolesComplete(services: readonly ServiceEntry[]): void {
   }
 }
 
+/** Refuse a role name that no package graph node can link, so renames fail the generator instead of degrading to plain text. */
+function assertServicePackageNamesExist(pkgs: Pkg[], roles: readonly ServiceRole[]): void {
+  const shorts = new Set(pkgs.map(pkg => pkg.short))
+  const missing: string[] = []
+  for (const role of roles) {
+    for (const name of [role.pkg, ...(role.implementations ?? []), ...(role.consumers ?? []), ...(role.companions ?? [])]) {
+      if (!shorts.has(name)) missing.push(`${role.key}:${name}`)
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(`service role package names absent from the package graph: ${missing.join(', ')}`)
+  }
+}
+
 function renderCapabilitySeams(pkgs: Pkg[], services: readonly ServiceEntry[]): string {
   assertServiceRolesComplete(services)
+  assertServicePackageNamesExist(pkgs, SERVICE_ROLES)
   const pkgsByShort = new Map(pkgs.map(pkg => [pkg.short, pkg]))
   const maintenance = 'hybrid: services are discovered from Cordis declarations; interface/implementation/consumer roles are classified in `scripts/gen-doc-graphs.ts` with a completeness guard'
   const nodes = new Map<string, string>()

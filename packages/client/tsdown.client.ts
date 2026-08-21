@@ -17,7 +17,7 @@ import type { UserConfig } from 'tsdown'
 import { transform } from 'lightningcss'
 import { optionalStringArray } from './modules/src/client/manifest.ts'
 import { PLATFORM_MODULES, PRELOADED_CLIENT_EXTERNALS } from './web/src/platform.ts'
-import { clientBuildEnvironmentDefines } from '../../scripts/client-build-environment.ts'
+import { clientBuildEnvironmentDefines, LOCAL_CLIENT_TITLE } from '../../scripts/client-build-environment.ts'
 
 /**
  * Virtual-id wrapper keeping module CSS away from tsdown's own css pipeline
@@ -472,6 +472,7 @@ function clientConfig(id: string, entry: string): UserConfig {
     // the truthiness probe would otherwise survive as an empty import.meta.
     define: {
       ...clientBuildEnvironmentDefines(process.env),
+      'process.env.DSH_CLIENT_TITLE': JSON.stringify(process.env.DSH_CLIENT_TITLE ?? LOCAL_CLIENT_TITLE),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
       'import.meta.env.MODE': JSON.stringify(process.env.NODE_ENV ?? 'production'),
       'import.meta.env': JSON.stringify({ MODE: process.env.NODE_ENV ?? 'production' }),

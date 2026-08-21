@@ -6,6 +6,7 @@
  * @module @deepseek-ai/dsh-web-search-perplexity/provider
  */
 
+import { readFileSync } from 'node:fs'
 import { WebError } from '@deepseek-ai/dsh-web'
 import type {
   WebSearchProvider,
@@ -14,6 +15,8 @@ import type {
   WebSearchSource,
 } from '@deepseek-ai/dsh-web'
 import type { PerplexityError, PerplexityResponse, PerplexitySearchResult } from './types.ts'
+
+const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
 
 /** Stable id this provider registers under. */
 export const PERPLEXITY_PROVIDER_ID = 'perplexity'
@@ -30,8 +33,8 @@ export const PERPLEXITY_DEFAULT_MAX_TOKENS = 1024
 /** Recency filter values Perplexity accepts for `search_recency_filter`. */
 export type PerplexityRecency = 'day' | 'week' | 'month' | 'year'
 
-/** Attribution header sent on every request. Bump with the package version. */
-const USER_AGENT = 'deepseek-harness/0.0.1'
+/** Attribution header sent on every request, carrying the package version. */
+const USER_AGENT = `deepseek-harness/${version}`
 
 /** Resolved provider options (the plugin's `apply` supplies env-var and constant defaults). */
 export interface PerplexitySearchProviderOptions {

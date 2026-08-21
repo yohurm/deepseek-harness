@@ -20,9 +20,9 @@ import type { ThemeRuntime } from '@deepseek-ai/dsh-client-ui-theme/client'
 
 /** Facade verbs beyond declared services (host CTX_VERBS twin). */
 const CTX_VERBS = new Set([
-  'effect', 'on', 'once', 'provide', 'timeout', 'interval', 'setTimeout', 'setInterval', 'throttle', 'debounce',
+  'effect', 'on', 'once', 'provide', 'timeout', 'interval', 'throttle', 'debounce',
 ])
-const TIMER_VERBS = new Set(['timeout', 'interval', 'setTimeout', 'setInterval', 'throttle', 'debounce'])
+const TIMER_VERBS = new Set(['timeout', 'interval', 'throttle', 'debounce'])
 
 /** One package's slot-registration ledger row (contribution projection source). */
 export interface DynamicCordisSlotLedgerRow {

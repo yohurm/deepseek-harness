@@ -2,14 +2,12 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { clientBuildEnvironmentDefines } from '../../scripts/client-build-environment.ts'
+import { clientBuildEnvironmentDefines, LOCAL_CLIENT_TITLE } from '../../scripts/client-build-environment.ts'
 
 const src = (rel: string): string => fileURLToPath(new URL(rel, import.meta.url))
 const STANDALONE_ERROR = 'apps/web is not a standalone application: bare Vite cannot inject window.__DSH_BOOT__. '
   + 'From a repository checkout, run `pnpm dsh web`; an installed package uses `dsh web`. '
   + 'For client-plugin HMR, run `pnpm dsh web` together with `pnpm run dev:web`.'
-const DEFAULT_CLIENT_TITLE = 'DSH Local Build'
-
 /** Escape build-time text before placing it in the HTML title element. */
 function escapeHtmlText(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -17,11 +15,11 @@ function escapeHtmlText(value: string): string {
 
 /** Project the public build title into the initial HTML document. */
 function clientDocumentTitle(): Plugin {
-  const title = escapeHtmlText(process.env.DSH_CLIENT_TITLE ?? DEFAULT_CLIENT_TITLE)
+  const title = escapeHtmlText(process.env.DSH_CLIENT_TITLE ?? LOCAL_CLIENT_TITLE)
   return {
     name: 'dsh-client-document-title',
     transformIndexHtml(html) {
-      return html.replace('<title>DSH Local Build</title>', `<title>${title}</title>`)
+      return html.replace('<title></title>', `<title>${title}</title>`)
     },
   }
 }
@@ -165,6 +163,7 @@ export default defineConfig({
   },
   define: {
     ...clientBuildEnvironmentDefines(process.env),
+    'process.env.DSH_CLIENT_TITLE': JSON.stringify(process.env.DSH_CLIENT_TITLE ?? LOCAL_CLIENT_TITLE),
     // vendored loader internal.ts: fromInternal() probes the Node major —
     // "0.0.0" takes neither branch, returning undefined (exactly the empty
     // internal slot the shell boot fills with the client module loader).

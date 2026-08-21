@@ -22,6 +22,9 @@ const OFFICIAL_CLIENT_BUILD_ENVIRONMENT = {
   DSH_CLIENT_TITLE: 'DeepSeek Harness',
 } as const
 
+/** Canonical product title for a local (non-official) build, the only source of that string. */
+export const LOCAL_CLIENT_TITLE = 'DSH Local Build'
+
 /** Public variable carrying the source commit embedded in client artifacts. */
 const CLIENT_COMMIT_HASH_VARIABLE = 'DSH_CLIENT_COMMIT_HASH'
 

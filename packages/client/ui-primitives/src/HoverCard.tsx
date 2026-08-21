@@ -12,6 +12,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { writeClipboard } from './clipboard.ts'
+import { COPIED_FEEDBACK_MS } from './use-copy-feedback.ts'
 import { usePointerGrace } from './pointer-grace.ts'
 import css from './HoverCard.module.css'
 
@@ -142,7 +143,7 @@ export function HoverCard({
     const height = card.offsetHeight
     copyHeightRef.current = height > 0 ? height : null
     setCopied(true)
-    copyTimerRef.current = setTimeout(clearCopied, 1000)
+    copyTimerRef.current = setTimeout(clearCopied, COPIED_FEEDBACK_MS)
   }
 
   const copyable = copyText !== undefined

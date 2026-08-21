@@ -7,6 +7,7 @@
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import clsx from 'clsx'
 import { writeClipboard } from '../clipboard.ts'
+import { COPIED_FEEDBACK_MS } from '../use-copy-feedback.ts'
 import { grammarLoadCount, highlightToHtml, subscribeGrammarLoaded } from './highlight.ts'
 import css from './CodeBlock.module.css'
 
@@ -41,7 +42,7 @@ export function CodeBlock({ code, lang, className, copyLabel = '复制', copiedL
     void writeClipboard(text).then((ok) => {
       if (!ok) return
       setCopied(true)
-      window.setTimeout(() => { setCopied(false) }, 1000)
+      window.setTimeout(() => { setCopied(false) }, COPIED_FEEDBACK_MS)
     })
   }, [copied, trimmed])
 

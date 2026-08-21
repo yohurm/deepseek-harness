@@ -12,6 +12,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { randomUUID } from 'node:crypto'
 import { isAbsolute } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import Schema from '@deepseek-ai/schemastery'
 import { createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
@@ -33,6 +34,7 @@ import {
   type StopReason,
   type Stream,
 } from '@agentclientprotocol/sdk'
+const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { SessionId, type SessionEvent, type TurnEndReason } from '@deepseek-ai/dsh-session'
 // Side-effect type import: declaration-merges the approval waterfall answered below.
@@ -293,7 +295,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
         imagePromptEnabled = await supportsAcpImagePrompts(ctx, config.provider, config.model)
         return {
           protocolVersion: PROTOCOL_VERSION,
-          agentInfo: { name: 'deepseek-harness-acp', version: '0.0.1' },
+          agentInfo: { name: 'deepseek-harness-acp', version },
           agentCapabilities: {
             promptCapabilities: { image: imagePromptEnabled, audio: false, embeddedContext: false },
           },

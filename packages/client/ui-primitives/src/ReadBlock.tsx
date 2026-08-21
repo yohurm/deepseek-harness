@@ -12,6 +12,7 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import clsx from 'clsx'
 import { writeClipboard } from './clipboard.ts'
+import { COPIED_FEEDBACK_MS } from './use-copy-feedback.ts'
 import {
   grammarLoadCount,
   highlightLines,
@@ -98,7 +99,7 @@ export function ReadBlock({
     void writeClipboard(raw).then((ok) => {
       if (!ok) return
       setCopied(true)
-      window.setTimeout(() => { setCopied(false) }, 1000)
+      window.setTimeout(() => { setCopied(false) }, COPIED_FEEDBACK_MS)
     })
   }, [copied, raw])
 

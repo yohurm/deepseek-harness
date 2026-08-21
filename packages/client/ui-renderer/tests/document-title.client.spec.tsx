@@ -25,12 +25,13 @@ describe('DocumentTitle', () => {
     expect(document.title).toBe('DeepSeek Harness')
   })
 
-  it('uses the generic title when the build provides no title', () => {
+  it('keeps the page title when the build provides no product title', () => {
     vi.stubEnv('DSH_CLIENT_TITLE', '')
     delete process.env.DSH_CLIENT_TITLE
+    document.title = 'Current page title'
     const mounted = render(<DocumentTitle title="First title" />)
-    expect(document.title).toBe('First title — DSH Local Build')
+    expect(document.title).toBe('First title — Current page title')
     mounted.unmount()
-    expect(document.title).toBe('DSH Local Build')
+    expect(document.title).toBe('Current page title')
   })
 })

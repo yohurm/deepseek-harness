@@ -633,8 +633,8 @@ export function sandboxRegisterTool(ctx: Context, tool: unknown): () => void {
  * services. `on`/`once` observe events, `provide` exposes a service to other packages, and the
  * timer helpers schedule work — each a fiber effect that unwinds when the package stops.
  */
-const CTX_VERBS = new Set(['effect', 'on', 'once', 'provide', 'timeout', 'interval', 'setTimeout', 'setInterval', 'throttle', 'debounce'])
-const TIMER_VERBS = new Set(['timeout', 'interval', 'setTimeout', 'setInterval', 'throttle', 'debounce'])
+const CTX_VERBS = new Set(['effect', 'on', 'once', 'provide', 'timeout', 'interval', 'throttle', 'debounce'])
+const TIMER_VERBS = new Set(['timeout', 'interval', 'throttle', 'debounce'])
 
 /**
  * The tool-registry façade: `register` (marker-guarded) plus READ-ONLY

@@ -15,7 +15,7 @@ import type { Context } from '@deepseek-ai/cordis'
 /* oxlint-disable typescript/prefer-promise-reject-errors -- Async iterators preserve arbitrary throw reasons. */
 
 declare module '@deepseek-ai/cordis' {
-  interface Context extends Pick<ClientTimerService, 'interval' | 'timeout' | 'throttle' | 'debounce' | 'setTimeout' | 'setInterval'> {
+  interface Context extends Pick<ClientTimerService, 'interval' | 'timeout' | 'throttle' | 'debounce'> {
     /** Browser timer Service used by the mixed-in Context helpers. */
     timer: ClientTimerService
   }
@@ -31,29 +31,7 @@ export class ClientTimerService extends Service {
   /** Register the Service and mix its lifecycle-safe helpers onto Context. */
   constructor(ctx: Context) {
     super(ctx, 'timer')
-    ctx.mixin('timer', ['timeout', 'interval', 'throttle', 'debounce', 'setTimeout', 'setInterval'])
-  }
-
-  /**
-   * Run a callback once through {@link timeout}.
-   * @param callback - Work to run after the delay.
-   * @param delay - Delay in milliseconds.
-   * @returns Disposer that cancels the pending callback early.
-   * @deprecated Use `ctx.timeout()` instead.
-   */
-  setTimeout(callback: () => void, delay: number): () => void {
-    return this.timeout(callback, delay)
-  }
-
-  /**
-   * Run a callback repeatedly through {@link interval}.
-   * @param callback - Work to run on each tick.
-   * @param delay - Interval in milliseconds.
-   * @returns Disposer that stops the interval early.
-   * @deprecated Use `ctx.interval()` instead.
-   */
-  setInterval(callback: () => void, delay: number): () => void {
-    return this.interval(callback, delay)
+    ctx.mixin('timer', ['timeout', 'interval', 'throttle', 'debounce'])
   }
 
   /**

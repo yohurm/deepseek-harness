@@ -72,7 +72,7 @@ describe('sandbox isolation and Node-API traps', () => {
         name: 'ticker',
         inject: ['timer'],
         apply(ctx) {
-          ctx.setTimeout(() => console.log('tick'), 10)
+          ctx.timeout(() => console.log('tick'), 10)
         },
       }
     `)

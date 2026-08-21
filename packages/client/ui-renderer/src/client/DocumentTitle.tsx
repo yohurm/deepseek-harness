@@ -1,7 +1,5 @@
 import { useEffect } from 'react'
 
-const DEFAULT_CLIENT_TITLE = 'DSH Local Build'
-
 /** Props for the browser title projection. */
 export interface DocumentTitleProps {
   /** Durable title of the selected session, or undefined for the product title. */
@@ -15,7 +13,9 @@ export interface DocumentTitleProps {
  * @returns No rendered content.
  */
 export function DocumentTitle({ title }: DocumentTitleProps): null {
-  const productTitle = process.env.DSH_CLIENT_TITLE ?? DEFAULT_CLIENT_TITLE
+  // The build injects the product title; outside a built bundle the page's
+  // current title is already the product title, so it is the fallback.
+  const productTitle = process.env.DSH_CLIENT_TITLE ?? document.title
   useEffect(() => {
     document.title = title === undefined ? productTitle : `${title} — ${productTitle}`
     return () => { document.title = productTitle }

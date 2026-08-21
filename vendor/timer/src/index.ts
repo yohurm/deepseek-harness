@@ -1,7 +1,7 @@
 import { Context, Service } from '@deepseek-ai/cordis'
 
 declare module '@deepseek-ai/cordis' {
-  interface Context extends Pick<TimerService, 'interval' | 'timeout' | 'throttle' | 'debounce' | 'setTimeout' | 'setInterval'> {
+  interface Context extends Pick<TimerService, 'interval' | 'timeout' | 'throttle' | 'debounce'> {
     timer: TimerService
   }
 }
@@ -12,17 +12,7 @@ type WithDispose<T> = T & { dispose: () => void }
 export class TimerService extends Service {
   constructor(ctx: Context) {
     super(ctx, 'timer')
-    ctx.mixin('timer', ['timeout', 'interval', 'throttle', 'debounce', 'setTimeout', 'setInterval'])
-  }
-
-  /** @deprecated use `ctx.timeout()` instead */
-  setTimeout(callback: () => void, delay: number) {
-    return this.timeout(callback, delay)
-  }
-
-  /** @deprecated use `ctx.interval()` instead */
-  setInterval(callback: () => void, delay: number) {
-    return this.interval(callback, delay)
+    ctx.mixin('timer', ['timeout', 'interval', 'throttle', 'debounce'])
   }
 
   /** Run a callback once, or return a promise that resolves after `delay`. */

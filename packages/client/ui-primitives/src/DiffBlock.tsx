@@ -11,6 +11,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import { writeClipboard } from './clipboard.ts'
+import { COPIED_FEEDBACK_MS } from './use-copy-feedback.ts'
 import css from './DiffBlock.module.css'
 
 /**
@@ -148,7 +149,7 @@ export function DiffBlock({ diffs, maxLines = DEFAULT_DIFF_MAX_LINES, className 
     void writeClipboard(copyText(rows)).then((ok) => {
       if (!ok) return
       setCopied(true)
-      window.setTimeout(() => { setCopied(false) }, 1000)
+      window.setTimeout(() => { setCopied(false) }, COPIED_FEEDBACK_MS)
     })
   }, [copied, rows])
 
